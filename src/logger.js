@@ -4,8 +4,10 @@ import { lastAction, onMount, onSet } from "nanostores";
 
 const styles = {
   bage: "color:white;background:black;padding-left:4px;padding-right:4px;font-weight:normal;",
-  action:
-    "color:white;background:green;padding-left:4px;padding-right:4px;font-weight:normal;",
+  type: "color:white;background:green;padding-left:4px;padding-right:4px;font-weight:normal;",
+  new: "color:white;background:green;padding-left:4px;padding-right:4px;font-weight:normal;",
+  old: "color:white;background:tomato;padding-left:4px;padding-right:4px;font-weight:normal;",
+  action: "color:white;background:indigo;padding-left:4px;padding-right:4px;font-weight:normal;",
   storeName:
     "color:white;background:blue;padding-left:4px;padding-right:4px;font-weight:normal;",
 };
@@ -21,7 +23,7 @@ const group = (cb, { logType, storeName }) => {
   let printStyles = [styles.bage];
   if (logType) {
     tpl += `%c${logType}`;
-    printStyles.push(styles.action);
+    printStyles.push(styles.type);
   }
   if (storeName) {
     tpl += `%c${storeName}`;
@@ -32,26 +34,30 @@ const group = (cb, { logType, storeName }) => {
   console.groupEnd();
 };
 
-// const getFileLink = () => {
-//   let stackTrace = new Error().stack; //get the stack trace string
-//   console.log(stackTrace, stackTrace.split("\n"))
-//   let userFile = stackTrace.split("\n")[4]; //create an array with all lines
-//   return userFile.replace("at ", "").trim();
-// };
+const log = ({ actionName, changed, newValue, oldValue, message }) => {
+  if (actionName) {
+    console.log("%caction", styles.action, actionName);
+  }
+  if (changed) {
+    console.log("%cchanged", styles.type, changed);
+  }
+  if (newValue) {
+    console.log("%cnew", styles.new, newValue);
+  }
+  if (oldValue) {
+    console.log("%cold", styles.old, oldValue);
+  }
+  if (message) {
+    console.log(message);
+  }
+};
 
 const handleSet = (storeName, store) => {
   return onSet(store, ({ changed, newValue }) => {
     const actionName = store[lastAction];
     group(
       () => {
-        console.log(
-          "actionName:",
-          actionName,
-          "oldValue:",
-          store.get(),
-          "newValue:",
-          newValue
-        );
+        log({ actionName, changed, newValue, oldValue: store.get() });
       },
       { logType: logTypes.change, storeName }
     );
@@ -62,7 +68,7 @@ const handleMount = (storeName, store) => {
   return onMount(store, () => {
     group(
       () => {
-        console.log("store is active");
+        console.log("store is mounted");
       },
       { logType: logTypes.create, storeName }
     );

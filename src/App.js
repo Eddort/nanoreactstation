@@ -1,18 +1,25 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { action, atom } from "nanostores";
+import { action, atom, map } from "nanostores";
 import { logger } from "./logger";
 // import { reduxDevtools } from "./RDT";
 
-const store = atom(1);
+const atomStore = atom(1);
+const mapStore = map({});
 // reduxDevtools({ store });
-logger({ store });
-const act = action(store, "test-action", (store) => {
+logger({ atomStore, mapStore });
+const act = action(atomStore, "atom-action", (store) => {
   store.set(store.get() + 1);
-  store.listen(() => {})
+});
+const setMap = action(mapStore, "map-action-set", (store) => {
+  store.set({ initial: true, otherValue: "some" });
+});
+const setMapKey = action(mapStore, "map-action-setKey", (store) => {
+  store.setKey("initial", !store.get().initial);
 });
 function App() {
-  store.listen(() => {})
+  atomStore.listen(() => {});
+  mapStore.listen(() => {});
   return (
     <div className="App">
       <header className="App-header">
@@ -20,9 +27,15 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <a className="App-link" onClick={act}>
-          Learn React
-        </a>
+        <div className="App-link" onClick={act}>
+          Atom
+        </div>
+        <div className="App-link" onClick={setMap}>
+          Map set
+        </div>
+        <div className="App-link" onClick={setMapKey}>
+          Map set key
+        </div>
       </header>
     </div>
   );
