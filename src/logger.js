@@ -1,16 +1,15 @@
 import { lastAction, onBuild, onMount, onSet, onStop } from "nanostores";
-
+const printStyles = (background) =>
+  `color:white;padding-left:4px;padding-right:4px;font-weight:normal;background:${background};`;
 const styles = {
-  bage: "color:white;background:black;padding-left:4px;padding-right:4px;font-weight:normal;",
-  type: "color:white;background:green;padding-left:4px;padding-right:4px;font-weight:normal;",
-  new: "color:white;background:green;padding-left:4px;padding-right:4px;font-weight:normal;",
-  old: "color:white;background:tomato;padding-left:4px;padding-right:4px;font-weight:normal;",
-  action:
-    "color:white;background:indigo;padding-left:4px;padding-right:4px;font-weight:normal;",
-  message:
-    "color:white;background:black;padding-left:4px;padding-right:4px;font-weight:normal;",
+  bage: printStyles("black"),
+  type: printStyles("green"),
+  new: printStyles("green"),
+  old: printStyles("tomato"),
+  action: printStyles("indigo"),
+  message: printStyles("black"),
   storeName:
-    "color:white;background:blue;padding-left:4px;padding-right:4px;font-weight:normal;",
+    "color:white;padding-left:4px;padding-right:4px;font-weight:normal;",
 };
 
 const logTypes = {
@@ -19,18 +18,22 @@ const logTypes = {
   change: "store changed",
 };
 
-const group = (cb, { logType, storeName }) => {
+const group = (cb, { logType, storeName, value }) => {
   let tpl = `%cnanostores`;
-  let printStyles = [styles.bage];
+  let consoleArgs = [styles.bage];
   if (logType) {
     tpl += `%c${logType}`;
-    printStyles.push(styles.type);
+    consoleArgs.push(styles.type);
   }
   if (storeName) {
     tpl += `%c${storeName}`;
-    printStyles.push(styles.storeName);
+    consoleArgs.push(styles.storeName);
   }
-  console.group(tpl, ...printStyles);
+  if (value) {
+    tpl += ` ->`;
+    consoleArgs.push(value);
+  }
+  console.groupCollapsed(tpl, ...consoleArgs);
   cb();
   console.groupEnd();
 };
@@ -60,7 +63,7 @@ const handleSet = (storeName, store) => {
       () => {
         log({ actionName, changed, newValue, oldValue: store.get() });
       },
-      { logType: logTypes.change, storeName }
+      { logType: logTypes.change, storeName, value: newValue }
     );
   });
 };
