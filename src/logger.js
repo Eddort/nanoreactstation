@@ -1,6 +1,8 @@
 import { lastAction, onBuild, onMount, onSet, onStop } from "nanostores";
+
 const printStyles = (background) =>
   `color:white;padding-left:4px;padding-right:4px;font-weight:normal;background:${background};`;
+
 const styles = {
   bage: printStyles("black"),
   new: printStyles("green"),
@@ -15,6 +17,7 @@ const logTypesStyles = {
   start: printStyles("blue"),
   create: printStyles("#8f1fff"),
   change: printStyles("green"),
+  stop: printStyles("tomato"),
 };
 
 const group = (cb, { logType, storeName, value }) => {
@@ -39,24 +42,24 @@ const group = (cb, { logType, storeName, value }) => {
 
 const log = ({ actionName, changed, newValue, oldValue, message }) => {
   if (actionName) {
-    console.log("%caction", styles.action, "→", actionName);
+    console.log("%caction", styles.action, actionName);
   }
   if (changed) {
-    console.log("%cchanged", styles.changed, "→", changed);
+    console.log("%cchanged", styles.changed, changed);
   }
   if (newValue) {
-    console.log("%cnew", styles.new, "→", newValue);
+    console.log("%cnew", styles.new, newValue);
   }
   if (oldValue) {
-    console.log("%cold", styles.old, "→", oldValue);
+    console.log("%cold", styles.old, oldValue);
   }
   if (message) {
     console.log(`%c${message}`, styles.message);
   }
 };
 
-const handleSet = (storeName, store) => {
-  return onSet(store, ({ changed, newValue }) => {
+const handleSet = (storeName, store) =>
+  onSet(store, ({ changed, newValue }) => {
     const actionName = store[lastAction];
     group(
       () => {
@@ -65,18 +68,24 @@ const handleSet = (storeName, store) => {
       { logType: "change", storeName, value: newValue }
     );
   });
-};
 
-const handleMount = (storeName, store) => {
-  return onMount(store, () => {
+const handleMount = (storeName, store) =>
+  onMount(store, () => {
     group(
       () => {
         log({ message: "Store was mounted" });
       },
       { logType: "create", storeName }
     );
+    return () => {
+      group(
+        () => {
+          log({ message: "Store was unmounted" });
+        },
+        { logType: "stop", storeName }
+      );
+    };
   });
-};
 
 const storeLogger = (storeName, store) => {
   group(
@@ -89,21 +98,19 @@ const storeLogger = (storeName, store) => {
   return () => unsubs.map((fn) => fn());
 };
 
-const templateLogger = (templateName, template) => {
-  return onBuild(template, ({ store }) => {
+const templateLogger = (templateName, template) =>
+  onBuild(template, ({ store }) => {
     const unsubLog = storeLogger(`${templateName}-${store.get().id}`, store);
     const usubStop = onStop(store, () => {
       unsubLog();
       usubStop();
     });
   });
-};
 
-const handle = ([storeName, store]) => {
-  return store.build
+const handle = ([storeName, store]) =>
+  store.build
     ? templateLogger(storeName, store)
     : storeLogger(storeName, store);
-};
 
 export const logger = (deps) => {
   deps = Object.entries(deps);
