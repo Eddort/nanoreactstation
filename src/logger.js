@@ -7,7 +7,10 @@ const styles = {
   type: "color:white;background:green;padding-left:4px;padding-right:4px;font-weight:normal;",
   new: "color:white;background:green;padding-left:4px;padding-right:4px;font-weight:normal;",
   old: "color:white;background:tomato;padding-left:4px;padding-right:4px;font-weight:normal;",
-  action: "color:white;background:indigo;padding-left:4px;padding-right:4px;font-weight:normal;",
+  action:
+    "color:white;background:indigo;padding-left:4px;padding-right:4px;font-weight:normal;",
+  message:
+    "color:white;background:black;padding-left:4px;padding-right:4px;font-weight:normal;",
   storeName:
     "color:white;background:blue;padding-left:4px;padding-right:4px;font-weight:normal;",
 };
@@ -48,7 +51,7 @@ const log = ({ actionName, changed, newValue, oldValue, message }) => {
     console.log("%cold", styles.old, oldValue);
   }
   if (message) {
-    console.log(message);
+    console.log(`%c${message}`, styles.message);
   }
 };
 
@@ -68,7 +71,7 @@ const handleMount = (storeName, store) => {
   return onMount(store, () => {
     group(
       () => {
-        console.log("store is mounted");
+        log({ message: "store mounted" });
       },
       { logType: logTypes.create, storeName }
     );
@@ -78,14 +81,17 @@ const handleMount = (storeName, store) => {
 const storeLogger = (storeName, store) => {
   group(
     () => {
-      console.log("listeners:", store.lc, "value", store.get());
+      log({ message: `logger connected to ${storeName} store` });
     },
     { logType: logTypes.start, storeName }
   );
   const unsubs = [handleSet(storeName, store), handleMount(storeName, store)];
   return () => unsubs.map((fn) => fn());
 };
-const templateLogger = () => {};
+
+const templateLogger = ([templateName, template]) => {
+  console.log(templateName, template);
+};
 
 const handle = ([storeName, store]) => {
   return store.onBuild
