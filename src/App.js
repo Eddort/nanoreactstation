@@ -1,13 +1,17 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { action, atom, map } from "nanostores";
+import { action, atom, map, mapTemplate } from "nanostores";
 import { logger } from "./logger";
 // import { reduxDevtools } from "./RDT";
 
 const atomStore = atom(1);
 const mapStore = map({});
+const Post = mapTemplate((newPost, id) => {
+  newPost.setKey("title", "New post");
+  newPost.setKey("updatedAt", Date.now());
+});
 // reduxDevtools({ store });
-logger({ atomStore, mapStore });
+logger({ atomStore, mapStore, Post });
 const act = action(atomStore, "atom-action", (store) => {
   store.set(store.get() + 1);
 });
@@ -35,6 +39,9 @@ function App() {
         </div>
         <div className="App-link" onClick={setMapKey}>
           Map set key
+        </div>
+        <div className="App-link" onClick={() => Post(Date.now())}>
+          Create Map
         </div>
       </header>
     </div>

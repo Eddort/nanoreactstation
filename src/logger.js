@@ -1,6 +1,4 @@
-import { lastAction, onMount, onSet } from "nanostores";
-
-// let tpl = `%cnanostores%caction`
+import { lastAction, onBuild, onMount, onSet, onStop } from "nanostores";
 
 const styles = {
   bage: "color:white;background:black;padding-left:4px;padding-right:4px;font-weight:normal;",
@@ -81,7 +79,7 @@ const handleMount = (storeName, store) => {
 const storeLogger = (storeName, store) => {
   group(
     () => {
-      log({ message: `logger connected to ${storeName} store` });
+      log({ message: `logger connected to ${storeName}` });
     },
     { logType: logTypes.start, storeName }
   );
@@ -89,12 +87,18 @@ const storeLogger = (storeName, store) => {
   return () => unsubs.map((fn) => fn());
 };
 
-const templateLogger = ([templateName, template]) => {
-  console.log(templateName, template);
+const templateLogger = (templateName, template) => {
+  return onBuild(template, ({ store }) => {
+    const unsubLog = storeLogger(`${templateName}-${store.get().id}`, store);
+    const usubStop = onStop(store, () => {
+      unsubLog();
+      usubStop();
+    });
+  });
 };
 
 const handle = ([storeName, store]) => {
-  return store.onBuild
+  return store.build
     ? templateLogger(storeName, store)
     : storeLogger(storeName, store);
 };
