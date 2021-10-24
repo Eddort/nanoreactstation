@@ -17,9 +17,7 @@ function toDataURL(url, callback) {
 }
 let IMG = "https://nanostores.github.io/nanostores/logo.svg";
 toDataURL(IMG, function (dataUrl) {
-  console.log(dataUrl);
   IMG = dataUrl;
-  console.log("%c ", `background:url("${dataUrl}") center;`, "!!!");
   logoStyles = "";
   logoStyles += `background-image: url("${IMG}");`;
   logoStyles += "background-size: cover;";
@@ -37,15 +35,15 @@ logoStyles += "padding: 0 3.1px;";
 logoStyles += "margin-right: 4px";
 
 
-let printStyles = (background) =>
-  `font-family:Menlo,monospace;padding:0 5px;background-color:${background};`;
+let printStyles = (background, halfRadius = false) =>
+  `font-family:Menlo,monospace;padding:0 5px;background-color:${background};border-radius:${halfRadius ? '0 99px 99px 0' : '99px'};`;
 
 let styles = {
   logo: logoStyles,
-  new: printStyles("#1da1f2"),
-  old: printStyles("#1da1f2"),
-  action: printStyles("indigo"),
-  changed: printStyles("MidnightBlue"),
+  new: printStyles("#1da1f2", true),
+  old: printStyles("#1da1f2", true),
+  action: printStyles("indigo", true),
+  changed: printStyles("MidnightBlue", true),
   message:
     "border-radius:10px;font-family:Menlo,monospace;margin-left:4px;padding:0 5px;",
   storeName:
@@ -84,7 +82,7 @@ let log = ({ actionName, changed, newValue, oldValue, message, logType }) => {
   let consoleArgs = [styles.logo];
   if (logType) {
     tpl += `%c${logType}`;
-    consoleArgs.push(logTypesStyles[logType]);
+    consoleArgs.push(logTypesStyles[logType] + 'border-radius: 99px 0 0 99px;');
   }
   if (actionName) {
     console.log(tpl + "%caction", ...consoleArgs, styles.action, actionName);
