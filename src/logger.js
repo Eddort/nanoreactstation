@@ -17,9 +17,7 @@ function toDataURL(url, callback) {
 }
 let IMG = "https://nanostores.github.io/nanostores/logo.svg";
 toDataURL(IMG, function (dataUrl) {
-  console.log(dataUrl);
   IMG = dataUrl;
-  console.log("%c ", `background:url("${dataUrl}") center;`, "!!!");
   logoStyles = "";
   logoStyles += `background-image: url("${IMG}");`;
   logoStyles += "background-size: cover;";
