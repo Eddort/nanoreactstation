@@ -1,22 +1,63 @@
-import { lastAction, onBuild, onMount, onSet, onStop } from "nanostores";
+import { lastAction, onBuild, onMount, onSet, onStop, atom } from "nanostores";
 
-let IMG =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAATlBMVEVHcEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///8RERHk5OQoKCh7e3uwsLBHR0fExMQ3Nzf6+vpvb29TU1OQkJDdMs0wAAAADHRSTlMAFXayINXB4Po4aUhAg3I2AAAAz0lEQVQoz31S7RbDEBRTalTR+m7f/0VHcWs7W/OPnLhJXIQqZkEYl5wRMaMRE6ZcVnCKp5tYXnLEa+nEyuQn2NoU30SmLtUET+3Dg2UWbgdttlMDhbNd2gRWKeVdZ+iMRLPrtsyozTQZF4jAFBsLZ0M9EjQYS1V2VHuID2aDV9GbapGjfqtd0lInB/aaZjc+Kh8GPW9zjjoi3YFY9xZKHBUt9EAgT67gkjnI0zvIWX2Js0MH0FuWnVBB6W3oemj76vr//zz86cMePOzOz317A/hKGGNmJVoKAAAAAElFTkSuQmCC";
+const queue = atom([]);
+queue.push = function (v) {
+  this.set([...this.get(), v]);
+};
+queue.clear = function () {
+  this.set([]);
+};
 
-let logoStyles = "";
-logoStyles += `background: url("${IMG}");`;
-logoStyles += "background-size: cover;";
-logoStyles += "font-family: Menlo, monospace;";
-logoStyles += "padding: 0 3.5px;";
-logoStyles += "margin-right: 4px";
+function toDataURL(url) {
+  return new Promise((resolve) => {
+    let xhr = new XMLHttpRequest();
+
+    xhr.onload = function () {
+      let reader = new FileReader();
+      reader.onloadend = function () {
+        resolve(reader.result);
+      };
+      reader.readAsDataURL(xhr.response);
+    };
+    xhr.open("GET", url);
+    xhr.responseType = "blob";
+    xhr.send();
+  });
+}
+
+const run = () => {
+  queue.subscribe((messages) => {
+    if (!messages.length) return;
+    messages.forEach(({ type, content = [] }) => {
+      console[type](
+        ...content.map((d) => (typeof d === "function" ? d(styles) : d))
+      );
+    });
+    queue.clear();
+  });
+};
+
+let IMG = "https://nanostores.github.io/nanostores/logo.svg";
+
+const bageLoader = (async () => {
+  let dataUrl = await toDataURL(IMG);
+  IMG = dataUrl;
+  let logoStyles = "";
+  logoStyles += `background-image: url("${IMG}");`;
+  logoStyles += "background-size: cover;";
+  logoStyles += "font-family: Menlo, monospace;";
+  logoStyles += "padding: 0 3.1px;";
+  logoStyles += "margin-right: 4px";
+  styles.logo = logoStyles;
+})();
 
 let printStyles = (background, halfRadius = false) =>
-  `font-family:Menlo,monospace;padding:0 5px;color:white;background-color:${background};border-radius:${
+  `font-family:Menlo,monospace;padding:0 5px;background-color:${background};border-radius:${
     halfRadius ? "0 99px 99px 0" : "99px"
   };`;
 
 let styles = {
-  logo: logoStyles,
+  logo: "",
   new: printStyles("#1da1f2", true),
   old: printStyles("#1da1f2", true),
   action: printStyles("indigo", true),
@@ -36,7 +77,7 @@ let logTypesStyles = {
 
 let group = (cb, { logType, storeName, value }) => {
   let tpl = `%c `;
-  let consoleArgs = [styles.logo];
+  let consoleArgs = [() => styles.logo];
   if (logType) {
     tpl += `%c${logType}`;
     consoleArgs.push(logTypesStyles[logType]);
@@ -49,9 +90,9 @@ let group = (cb, { logType, storeName, value }) => {
     tpl += ` →`;
     consoleArgs.push(value);
   }
-  console.groupCollapsed(tpl, ...consoleArgs);
+  queue.push({ type: "groupCollapsed", content: [tpl, ...consoleArgs] });
   cb();
-  console.groupEnd();
+  queue.push({ type: "groupEnd" });
 };
 
 let log = ({ actionName, changed, newValue, oldValue, message, logType }) => {
@@ -62,19 +103,31 @@ let log = ({ actionName, changed, newValue, oldValue, message, logType }) => {
     consoleArgs.push(logTypesStyles[logType] + "border-radius: 99px 0 0 99px;");
   }
   if (actionName) {
-    console.log(tpl + "%caction", ...consoleArgs, styles.action, actionName);
+    queue.push({
+      type: "log",
+      content: [tpl + "%caction", ...consoleArgs, styles.action, actionName],
+    });
   }
   if (changed) {
-    console.log(tpl + "%ckey", ...consoleArgs, styles.changed, changed);
+    queue.push({
+      type: "log",
+      content: [tpl + "%ckey", ...consoleArgs, styles.changed, changed],
+    });
   }
   if (newValue) {
-    console.log(tpl + "%cnew", ...consoleArgs, styles.new, newValue);
+    queue.push({
+      type: "log",
+      content: [tpl + "%cnew", ...consoleArgs, styles.new, newValue],
+    });
   }
   if (oldValue) {
-    console.log(tpl + "%cold", ...consoleArgs, styles.old, oldValue);
+    queue.push({
+      type: "log",
+      content: [tpl + "%cold", ...consoleArgs, styles.old, oldValue],
+    });
   }
   if (message) {
-    console.log(`%c${message}`, styles.message);
+    queue.push({ type: "log", content: [`%c${message}`, styles.message] });
   }
 };
 
@@ -141,6 +194,7 @@ let handle = ([storeName, store]) =>
     : storeLogger(storeName, store);
 
 export let logger = (deps) => {
+  bageLoader.then(run);
   deps = Object.entries(deps);
   let unsubs = deps.map(handle);
   return () => unsubs.map((fn) => fn());
