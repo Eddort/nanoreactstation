@@ -1,42 +1,19 @@
 import { lastAction, onBuild, onMount, onSet, onStop } from "nanostores";
 
-function toDataURL(url, callback) {
-  var xhr = new XMLHttpRequest();
-
-  xhr.onload = function () {
-    var reader = new FileReader();
-    reader.onloadend = function () {
-      callback(reader.result);
-    };
-    reader.readAsDataURL(xhr.response);
-  };
-  xhr.open("GET", url);
-  //   xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
-  xhr.responseType = "blob";
-  xhr.send();
-}
-let IMG = "https://nanostores.github.io/nanostores/logo.svg";
-toDataURL(IMG, function (dataUrl) {
-  IMG = dataUrl;
-  logoStyles = "";
-  logoStyles += `background-image: url("${IMG}");`;
-  logoStyles += "background-size: cover;";
-  logoStyles += "font-family: Menlo, monospace;";
-  logoStyles += "padding: 0 3.1px;";
-  logoStyles += "margin-right: 4px";
-  styles.logo = logoStyles
-});
+let IMG =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAMAAADzN3VRAAAATlBMVEVHcEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///8RERHk5OQoKCh7e3uwsLBHR0fExMQ3Nzf6+vpvb29TU1OQkJDdMs0wAAAADHRSTlMAFXayINXB4Po4aUhAg3I2AAAAz0lEQVQoz31S7RbDEBRTalTR+m7f/0VHcWs7W/OPnLhJXIQqZkEYl5wRMaMRE6ZcVnCKp5tYXnLEa+nEyuQn2NoU30SmLtUET+3Dg2UWbgdttlMDhbNd2gRWKeVdZ+iMRLPrtsyozTQZF4jAFBsLZ0M9EjQYS1V2VHuID2aDV9GbapGjfqtd0lInB/aaZjc+Kh8GPW9zjjoi3YFY9xZKHBUt9EAgT67gkjnI0zvIWX2Js0MH0FuWnVBB6W3oemj76vr//zz86cMePOzOz317A/hKGGNmJVoKAAAAAElFTkSuQmCC";
 
 let logoStyles = "";
-logoStyles += `background: url("${IMG}") center;`;
+logoStyles += `background: url("${IMG}");`;
 logoStyles += "background-size: cover;";
 logoStyles += "font-family: Menlo, monospace;";
-logoStyles += "padding: 0 3.1px;";
+logoStyles += "padding: 0 3.5px;";
 logoStyles += "margin-right: 4px";
 
-
 let printStyles = (background, halfRadius = false) =>
-  `font-family:Menlo,monospace;padding:0 5px;background-color:${background};border-radius:${halfRadius ? '0 99px 99px 0' : '99px'};`;
+  `font-family:Menlo,monospace;padding:0 5px;color:white;background-color:${background};border-radius:${
+    halfRadius ? "0 99px 99px 0" : "99px"
+  };`;
 
 let styles = {
   logo: logoStyles,
@@ -82,7 +59,7 @@ let log = ({ actionName, changed, newValue, oldValue, message, logType }) => {
   let consoleArgs = [styles.logo];
   if (logType) {
     tpl += `%c${logType}`;
-    consoleArgs.push(logTypesStyles[logType] + 'border-radius: 99px 0 0 99px;');
+    consoleArgs.push(logTypesStyles[logType] + "border-radius: 99px 0 0 99px;");
   }
   if (actionName) {
     console.log(tpl + "%caction", ...consoleArgs, styles.action, actionName);
