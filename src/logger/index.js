@@ -24,34 +24,35 @@ let handleMount = (storeName, store) =>
       () => {
         log({ message: "Store was mounted" });
       },
-      { logType: "create", storeName }
+      { logType: "mount", storeName }
     );
     return () => {
       group(
         () => {
           log({ message: "Store was unmounted" });
         },
-        { logType: "stop", storeName }
+        { logType: "unmount", storeName }
       );
     };
   });
 
 let storeLogger = (storeName, store) => {
-  group(
-    () => {
-      log({
-        message: `Logger was connected to ${storeName}`,
-      });
-    },
-    { logType: "start", storeName }
-  );
   let unsubs = [handleSet(storeName, store), handleMount(storeName, store)];
   return () => unsubs.map((fn) => fn());
 };
 
 let templateLogger = (templateName, template) =>
   onBuild(template, ({ store }) => {
-    let unsubLog = storeLogger(`${templateName}-${store.get().id}`, store);
+    const storeName = `${templateName}-${store.get().id}`;
+    group(
+      () => {
+        log({
+          message: `Logger was connected to ${storeName}`,
+        });
+      },
+      { logType: "build", storeName }
+    );
+    let unsubLog = storeLogger(storeName, store);
     let usubStop = onStop(store, () => {
       unsubLog();
       usubStop();

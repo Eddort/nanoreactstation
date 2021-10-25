@@ -17,8 +17,8 @@ export let styles = {
 };
 
 export let logTypesStyles = {
-  start: printStyles("blue"),
-  create: printStyles("#8f1fff"),
+  mount: printStyles("blue"),
+  build: printStyles("#8f1fff"),
   change: printStyles("green"),
-  stop: printStyles("tomato"),
+  unmount: printStyles("tomato"),
 };
