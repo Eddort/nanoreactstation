@@ -1,61 +1,5 @@
 import { lastAction, onBuild, onMount, onSet, onStop } from "nanostores";
-import { styles, logTypesStyles, queue, bageLoader, run } from "./bage-logger";
-
-let group = (cb, { logType, storeName, value }) => {
-  let tpl = `%c `;
-  let consoleArgs = [() => styles.logo];
-  if (logType) {
-    tpl += `%c${logType}`;
-    consoleArgs.push(logTypesStyles[logType]);
-  }
-  if (storeName) {
-    tpl += `%c${storeName}`;
-    consoleArgs.push(styles.storeName);
-  }
-  if (value) {
-    tpl += ` →`;
-    consoleArgs.push(value);
-  }
-  queue.push({ type: "groupCollapsed", content: [tpl, ...consoleArgs] });
-  cb();
-  queue.push({ type: "groupEnd" });
-};
-
-let log = ({ actionName, changed, newValue, oldValue, message, logType }) => {
-  let tpl = `%c `;
-  let consoleArgs = [() => styles.logo];
-  if (logType) {
-    tpl += `%c${logType}`;
-    consoleArgs.push(logTypesStyles[logType] + "border-radius: 99px 0 0 99px;");
-  }
-  if (actionName) {
-    queue.push({
-      type: "log",
-      content: [tpl + "%caction", ...consoleArgs, styles.action, actionName],
-    });
-  }
-  if (changed) {
-    queue.push({
-      type: "log",
-      content: [tpl + "%ckey", ...consoleArgs, styles.changed, changed],
-    });
-  }
-  if (newValue) {
-    queue.push({
-      type: "log",
-      content: [tpl + "%cnew", ...consoleArgs, styles.new, newValue],
-    });
-  }
-  if (oldValue) {
-    queue.push({
-      type: "log",
-      content: [tpl + "%cold", ...consoleArgs, styles.old, oldValue],
-    });
-  }
-  if (message) {
-    queue.push({ type: "log", content: [`%c${message}`, styles.message] });
-  }
-};
+import { log, group } from "./printer";
 
 let handleSet = (storeName, store) =>
   onSet(store, ({ changed, newValue }) => {
@@ -120,7 +64,6 @@ let handle = ([storeName, store]) =>
     : storeLogger(storeName, store);
 
 export let logger = (deps) => {
-  bageLoader.then(run);
   deps = Object.entries(deps);
   let unsubs = deps.map(handle);
   return () => unsubs.map((fn) => fn());
